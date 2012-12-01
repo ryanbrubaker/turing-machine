@@ -15,6 +15,19 @@
          <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
          <![endif]-->
 
+      <style type="text/css"> 
+            .table th
+            {
+               border: 1px solid;
+            }
+            .table th:first-child
+            {
+               border: 0;
+            }
+            .table tbody tr:hover td,.table tbody tr:hover th
+            {
+            }
+      </style>
    </head>
    
    <body>
@@ -25,9 +38,23 @@
          <br />
          <div class="row">
             <div id="turingDiv" class="span6">
-               <canvas id="paperTapeCanvas" width="800" height="75"
+               <canvas id="paperTapeCanvas" width="900" height="75"
                 style="border: 2px solid"></canvas>
             </div>
+         </div>
+         
+         <br />
+         <br />
+         <div class="row">
+            <table class="table" style="border: 0;">
+               <tr>
+                  <th><i class="icon-plus-sign"></i></th>
+                  <th>State Name</th>
+                  <th>Symbol</th>
+                  <th>Operations</th>
+                  <th>Result State</th>
+               </tr>
+            </table>
          </div>
       </div>
       <script src="jquery-1.7.2.min.js"></script>
