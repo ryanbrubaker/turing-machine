@@ -65,6 +65,14 @@ shiftTapeLeft = ->
 
 init = ->
    #shiftTapeRight()
+   
+   $ ->
+      $('#stateMachineDefinition').on('click', '.icon-plus-sign',
+         (eventObject) -> 
+            newRow = $('#stateRowTemplate').clone()
+            $('#stateMachineDefinition').append(newRow)
+            $(eventObject.target).parent().empty())
+            
 
 $(document).ready init
 

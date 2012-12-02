@@ -93,7 +93,16 @@
     }, 0, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
   };
 
-  init = function() {};
+  init = function() {
+    return $(function() {
+      return $('#stateMachineDefinition').on('click', '.icon-plus-sign', function(eventObject) {
+        var newRow;
+        newRow = $('#stateRowTemplate').clone();
+        $('#stateMachineDefinition').append(newRow);
+        return $(eventObject.target).parent().empty();
+      });
+    });
+  };
 
   $(document).ready(init);
 

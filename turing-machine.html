@@ -16,17 +16,34 @@
          <![endif]-->
 
       <style type="text/css"> 
-            .table th
+            .table
             {
-               border: 1px solid;
+               width: 95%;
             }
-            .table th:first-child
+            .table th, .table td
+            {
+               border: 1px solid;    
+            }
+            .table th:first-child, .table tbody tr td:first-child
             {
                border: 0;
+               padding-top: 25%;
+               padding-right: 25%;
             }
             .table tbody tr:hover td,.table tbody tr:hover th
             {
                background-color:#ffffff;
+            }
+            
+            .table tbody tr td
+            {
+               margin: 0;
+               padding: 0;
+            }
+            
+            td input
+            {
+               margin: 0;
             }
       </style>
    </head>
@@ -46,15 +63,39 @@
          
          <br />
          <br />
+         
+         
+         <div class="span2">
+            <a class="btn" id="start-machine">Start</a>
+         </div>
+   
+         <br />
+         <br />
+         <br />
+         
+         <table style="display:none;">
+            <tbody>
+               <tr id="stateRowTemplate">
+                  <td class="pull-right"><i class="icon-plus-sign"></i></td>
+                  <td><input type="text" /></td>
+                  <td><input type="text" /></td>
+                  <td><input type="text" /></td>
+                  <td><input type="text" /></td>
+               </tr>
+            </tbody>
+         </table>
+            
          <div class="row">
-            <table class="table" style="border: 0;">
+            <table id="stateMachineDefinition" class="table table-condensed" style="border: 0;">
                <tr>
-                  <th><i class="icon-plus-sign"></i></th>
+                  <th class="pull-right"><i class="icon-plus-sign"></i></th>
                   <th>State Name</th>
                   <th>Symbol</th>
                   <th>Operations</th>
                   <th>Result State</th>
                </tr>
+               <tbody>
+               </tbody>
             </table>
          </div>
       </div>
