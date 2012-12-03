@@ -67,15 +67,29 @@
          
          <div class="span2">
             <a class="btn" id="start-machine">Start</a>
+            <a class="btn" id="clear-machine">Clear</a>
          </div>
    
          <br />
          <br />
          <br />
          
+         <p>
+            You can specify multiple symbols for a given state by adding a new entry under the first state entry and leaving the &quot;State Name&quot; column blank. 
+            <br/>
+            Valid operations are a comma-separated list of the following items (e.g. &quot;R, R, P1&quot;):
+            
+            <ul>
+               <li>L: Shift tape left</li>
+               <li>R: Shift tape right</li>
+               <li>Px: Print x, where x can be any character</li>
+               <li>E: Erase character</li>
+            </ul>
+         </p>
+         
          <table style="display:none;">
             <tbody>
-               <tr id="stateRowTemplate">
+               <tr id="stateRowTemplate" class="addedRow">
                   <td class="pull-right"><i class="icon-plus-sign"></i></td>
                   <td><input type="text" /></td>
                   <td><input type="text" /></td>
@@ -86,15 +100,15 @@
          </table>
             
          <div class="row">
-            <table id="stateMachineDefinition" class="table table-condensed" style="border: 0;">
-               <tr>
-                  <th class="pull-right"><i class="icon-plus-sign"></i></th>
-                  <th>State Name</th>
-                  <th>Symbol</th>
-                  <th>Operations</th>
-                  <th>Result State</th>
-               </tr>
+            <table id="stateMachineTable" class="table table-condensed" style="border: 0;">
                <tbody>
+                  <tr>
+                     <th class="pull-right"><i class="icon-plus-sign"></i></th>
+                     <th>State Name</th>
+                     <th>Symbol</th>
+                     <th>Operations</th>
+                     <th>Result State</th>
+                  </tr>
                </tbody>
             </table>
          </div>

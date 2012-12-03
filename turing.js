@@ -8,17 +8,20 @@
 
     State.name = 'State';
 
-    function State(actions, nextState) {
-      this.actions = actions;
+    function State(nextState) {
+      this.operations = {};
       this.nextState = nextState;
     }
 
-    State.prototype.actionsFor = function(character) {
-      var _base;
-      if (typeof (_base = this.actions)[character] === "function" ? _base[character](this.actions[character]) : void 0) {
+    State.prototype.addOperation = function(character, operations) {
+      return this.operations[character] = operations;
+    };
 
+    State.prototype.operationsFor = function(character) {
+      if (this.operations[character] != null) {
+        return this.operations[character];
       } else {
-        return null;
+        throw new Error('Encountered invalid symbol.');
       }
     };
 
@@ -35,22 +38,73 @@
     StateMachine.name = 'StateMachine';
 
     function StateMachine() {
-      this.states = [];
+      this.states = {};
       this.currentState = null;
     }
 
-    StateMachine.prototype.addState = function(name, state) {
-      return this.states[name] = state;
+    StateMachine.prototype.setup = function(states) {
+      var currentState, currentStateName, initialStateName, newState, state, stateName, _i, _len, _ref;
+      this.states = {};
+      this.currentState = null;
+      if (states.length === 0) {
+        throw new Error("You must specify at least one state.");
+      }
+      initialStateName = '';
+      currentStateName = '';
+      for (_i = 0, _len = states.length; _i < _len; _i++) {
+        state = states[_i];
+        if (currentStateName === '' && state[0] === '') {
+          throw new Error('State must have a name.');
+        }
+        if (state[1] === '') {
+          throw new Error('State must specify a character.');
+        }
+        if (!this.validOperations(state[2])) {
+          throw new Error('Allowed operations are "L", "R", "E", "P[x]"');
+        }
+        if (state[0] === '') {
+          this.states[currentStateName].addOperation(state[1], state[2]);
+        } else {
+          currentStateName = state[0];
+          newState = new State(state[3]);
+          newState.addOperation(state[1], state[2]);
+          this.states[currentStateName] = newState;
+        }
+      }
+      _ref = this.states;
+      for (stateName in _ref) {
+        state = _ref[stateName];
+        if (!(this.states[state.nextState] != null)) {
+          throw new Error('Result state does not exist.');
+        }
+      }
+      return currentState = this.states[initialStateName];
+    };
+
+    StateMachine.prototype.goNextState = function() {
+      return this.currentState = this.currentState.nextState;
+    };
+
+    StateMachine.prototype.validOperations = function(operationList) {
+      var operation, operations, valid, _i, _len;
+      valid = true;
+      operations = operationList.split(',');
+      for (_i = 0, _len = operations.length; _i < _len; _i++) {
+        operation = operations[_i];
+        operation = operation.trim();
+        valid = valid && ((operation === 'L' || operation === 'R' || operation === 'E') || (operation[0] === 'P' && operation.length === 2));
+      }
+      return valid;
     };
 
     StateMachine.prototype.processState = function(character) {
-      var actions;
+      var operations;
       if (null === this.currentState) {
-        throw new Error("Invalid state");
+        throw new Error("Invalid state.");
       } else {
-        actions = this.currentState[character];
+        operations = this.currentState[character];
         this.currentState = this.currentState.nextState;
-        return actions;
+        return operations;
       }
     };
 
@@ -94,11 +148,35 @@
   };
 
   init = function() {
+    var stateMachine;
+    stateMachine = new StateMachine();
+    $(function() {
+      return $('#start-machine').on('click', function() {
+        var i, row, stateRawData, stateRows, statesRawData, td, _i, _j, _len;
+        try {
+          stateRows = $('#stateMachineTable .addedRow');
+          statesRawData = [];
+          for (_i = 0, _len = stateRows.length; _i < _len; _i++) {
+            row = stateRows[_i];
+            stateRawData = [];
+            for (i = _j = 1; _j <= 4; i = ++_j) {
+              td = $(row).children()[i];
+              stateRawData.push($(td).children()[0].value.trim());
+            }
+            statesRawData.push(stateRawData);
+          }
+          return stateMachine.setup(statesRawData);
+        } catch (error) {
+          return alert(error);
+        }
+      });
+    });
     return $(function() {
-      return $('#stateMachineDefinition').on('click', '.icon-plus-sign', function(eventObject) {
+      return $('#stateMachineTable').on('click', '.icon-plus-sign', function(eventObject) {
         var newRow;
         newRow = $('#stateRowTemplate').clone();
-        $('#stateMachineDefinition').append(newRow);
+        newRow.id = '';
+        $('#stateMachineTable').append(newRow);
         return $(eventObject.target).parent().empty();
       });
     });
