@@ -1,19 +1,16 @@
-symbols = list = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i']
-
 class State
    constructor: (nextState) ->
       @operations = {}
       @nextState = nextState
    
-   addOperation: (character, operations) ->
+   addOperations: (character, operations) ->
       @operations[character] = operations
    
    operationsFor: (character) ->
       if @operations[character]? 
          return @operations[character] 
       else 
-         throw new Error('Encountered invalid symbol.')
-      
+         throw new Error('Encountered invalid symbol.')  
    nextState: ->
       return @nextState
 
@@ -26,31 +23,33 @@ class StateMachine
       @states = {}
       @currentState = null
       throw new Error("You must specify at least one state.") if states.length is 0
-      initialStateName = ''
-      currentStateName = ''
+      initialStateName = null
+      currentStateName = null
       
       for state in states
          throw new Error('State must have a name.') if currentStateName is '' and state[0] is '' 
          throw new Error('State must specify a character.') if state[1] is ''
          throw new Error('Allowed operations are "L", "R", "E", "P[x]"') if not @validOperations(state[2])
          
+         operations = state[2].split(',')
+         for i in [0...operations.length]
+            operations[i] = operations[i].trim()
+         
          if state[0] is ''
-            @states[currentStateName].addOperation(state[1], state[2])
+            @states[currentStateName].addOperations(state[1], operations)
          else
             currentStateName = state[0]
+            initialStateName = currentStateName if not initialStateName?
             newState = new State(state[3])
-            newState.addOperation(state[1], state[2])
+            newState.addOperations(state[1], operations)
             @states[currentStateName] = newState
       
       for stateName, state of @states
          if not(@states[state.nextState]?)
             throw new Error('Result state does not exist.')
       
-      currentState = @states[initialStateName]
+      @currentState = @states[initialStateName]
    
-   goNextState: ->
-      @currentState = @currentState.nextState
-      
    validOperations: (operationList) ->
       valid = true
       operations = operationList.split(',')
@@ -65,14 +64,47 @@ class StateMachine
    ## given character and moves to the next state. Assumes
    ## the controller updates the UI appropriately   
    processState: (character) ->
+      character = 'none' if character is ""
       if null is @currentState
          throw new Error("Invalid state.")
       else
-         operations = @currentState[character]
-         @currentState = @currentState.nextState
+         operations = @currentState.operationsFor(character).slice(0)
+         @currentState = @states[@currentState.nextState]
          return operations
-         
+
+class Tape
+   constructor: () ->
+      @currentPos = 0
+      @printedCharacters = []
+   
+   doOperation: (operation) ->
+      switch operation
+         when "E" then @printedCharacters[@currentPos] = ""
+         when "L" then @currentPos -= 1
+         when "R" 
+            @currentPos += 1
+            @printedCharacters[@currentPos] = "" if @currentPos > @printedCharacters.length
+         else
+            # Assuming we have a Px here since checks are done elsewhere
+            @printedCharacters[@currentPos] = operation[1]
+   
+   currentCharacter: () ->
+      return @printedCharacters[@currentPos] || ''
+
+drawThickLine = (xCoord) ->
+   context = document.getElementById("paperTapeCanvas").getContext('2d')
+   context.lineWidth = 5;
+   context.beginPath()
+   context.moveTo(xCoord, 0)
+   context.lineTo(xCoord, 50)
+   context.closePath()
+   context.stroke()
+
+
 shiftTapeStep = (xCoordFunc, stepNum, stepIndices) ->
+   context = document.getElementById("paperTapeCanvas").getContext('2d')
+   context.lineWidth = 1;
+
    if stepNum <= 100
       context = document.getElementById("paperTapeCanvas").getContext('2d')
       context.clearRect(0, 0, context.canvas.width, context.canvas.height)
@@ -81,18 +113,21 @@ shiftTapeStep = (xCoordFunc, stepNum, stepIndices) ->
       for i in stepIndices
          context.beginPath()
          context.moveTo(xCoordFunc(i, stepNum), 0)
-         context.lineTo(xCoordFunc(i, stepNum), 75)
-         context.strokeStyle = "#999"
+         context.lineTo(xCoordFunc(i, stepNum), 50)
+         context.strokeStyle = "#000"
          context.closePath()   
          context.stroke()
-         context.fillText(symbols[i], i * 100 + 35 + stepNum, 50);
+         #context.fillText(symbols[i], i * 100 + 35 + stepNum, 50);
 
    
       stepNum += 1
       setTimeout(() ->
          shiftTapeStep(xCoordFunc, stepNum, stepIndices)
       , 1)
-   
+   else
+      # mark center square as current square being viewed
+      drawThickLine(400)
+      drawThickLine(500)
    
 shiftTapeRight = ->
    shiftTapeStep((boxIndex, stepNum) ->
@@ -104,16 +139,34 @@ shiftTapeLeft = ->
    shiftTapeStep((boxIndex, stepNum) ->
       return boxIndex * 100 - stepNum
    , 0, [1..9])
-      
+
+
+stateMachine = new StateMachine()
+currentOperations = []
+tape = new Tape()
+
+nextOperation = () ->
+   if 0 is currentOperations.length
+      currentOperations = stateMachine.processState(tape.currentCharacter())
+   else
+      operation = currentOperations.shift()
+      tape.doOperation(operation)
+      switch operation
+         when "E" then alert("e")
+         when "L" then shiftTapeLeft()
+         when "R" then shiftTapeRight()
+         else
+            # Assuming we have a Px here since checks are done elsewhere
+            alert("p")
+   setTimeout(nextOperation, 1000)
+   
 
 init = ->
-   #shiftTapeRight()
-   
-   stateMachine = new StateMachine()
-   
+
    $ ->
       $('#start-machine').on('click', 
          ->
+            # read in the state machine defined by the user
             try
                stateRows = $('#stateMachineTable .addedRow')
                statesRawData = []
@@ -126,7 +179,12 @@ init = ->
                stateMachine.setup(statesRawData)
             catch error
                alert(error)
-            )
+            
+            # now run it
+            currentOperations = stateMachine.processState("")
+            nextOperation()
+      )
+            
             
    $ ->
       $('#stateMachineTable').on('click', '.icon-plus-sign',
@@ -135,7 +193,8 @@ init = ->
             newRow.id = ''
             $('#stateMachineTable').append(newRow)
             $(eventObject.target).parent().empty())
-            
+      
 
 $(document).ready init
+
 

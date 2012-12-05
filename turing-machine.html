@@ -56,14 +56,12 @@
          <br />
          <div class="row">
             <div id="turingDiv" class="span6">
-               <canvas id="paperTapeCanvas" width="900" height="75"
+               <canvas id="paperTapeCanvas" width="900" height="50"
                 style="border: 2px solid"></canvas>
             </div>
          </div>
          
          <br />
-         <br />
-         
          
          <div class="span2">
             <a class="btn" id="start-machine">Start</a>
@@ -77,15 +75,15 @@
          <p>
             You can specify multiple symbols for a given state by adding a new entry under the first state entry and leaving the &quot;State Name&quot; column blank. 
             <br/>
+            The first state in the table will be considered the initial state.
+            <br />
+            Valid symbols are any single character, &quot;any&quot; for any non-blank character or &quot;none&quot; for a blank square.
+            <br />
             Valid operations are a comma-separated list of the following items (e.g. &quot;R, R, P1&quot;):
+            <br />
+               <span style="margin-left: 10em;">L: Shift tape left, R: Shift tape right, Px: Print x, where x can be any character, E: Erase character</span>
+            <br />
             
-            <ul>
-               <li>L: Shift tape left</li>
-               <li>R: Shift tape right</li>
-               <li>Px: Print x, where x can be any character</li>
-               <li>E: Erase character</li>
-            </ul>
-         </p>
          
          <table style="display:none;">
             <tbody>
