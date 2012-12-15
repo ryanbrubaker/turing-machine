@@ -1,3 +1,9 @@
+alternatingOnesAndZeros = [
+   ['a', 'none',        'P0', 'a'],
+   [ '',    '0',  'R, R, P1', 'a'],
+   [ '',    '1',  'R, R, P0', 'a']
+]
+
 class State
    constructor: (nextState) ->
       @operations = {}
@@ -74,7 +80,7 @@ class StateMachine
 
 class Tape
    constructor: () ->
-      @currentPos = 0
+      @currentPos = 4
       @printedCharacters = []
    
    doOperation: (operation) ->
@@ -90,6 +96,12 @@ class Tape
    
    currentCharacter: () ->
       return @printedCharacters[@currentPos] || ''
+      
+   characterAtIndex: (index) ->
+      if @printedCharacters[@currentPos - (4 - index)]?
+         return @printedCharacters[@currentPos - (4 - index)]
+      else
+         return ""
 
 drawThickLine = (xCoord) ->
    context = document.getElementById("paperTapeCanvas").getContext('2d')
@@ -101,23 +113,41 @@ drawThickLine = (xCoord) ->
    context.stroke()
 
 
+drawCurrentTapeSnapshot = () ->
+   context = document.getElementById("paperTapeCanvas").getContext('2d')
+   context.lineWidth = 1;
+   context.font = "bold 48px sans-serif";
+   context.clearRect(0, 0, context.canvas.width, context.canvas.height)
+   
+   for i in [0..8]
+      context.beginPath
+      context.moveTo(i * 100, 0)
+      context.lineTo(i * 100, 50)
+      context.strokeStyle = "#000"
+      context.closePath()   
+      context.stroke()
+      context.fillText(tape.characterAtIndex(i) , i * 100 + 35, 40);
+   
+   drawThickLine(400)
+   drawThickLine(500)
+
+
 shiftTapeStep = (xCoordFunc, stepNum, stepIndices) ->
    context = document.getElementById("paperTapeCanvas").getContext('2d')
    context.lineWidth = 1;
+   context.font = "bold 48px sans-serif";
+   context.strokeStyle = "#000"
 
    if stepNum <= 100
-      context = document.getElementById("paperTapeCanvas").getContext('2d')
       context.clearRect(0, 0, context.canvas.width, context.canvas.height)
-      context.font = "bold 48px sans-serif";
-
+      
       for i in stepIndices
          context.beginPath()
          context.moveTo(xCoordFunc(i, stepNum), 0)
          context.lineTo(xCoordFunc(i, stepNum), 50)
-         context.strokeStyle = "#000"
          context.closePath()   
          context.stroke()
-         #context.fillText(symbols[i], i * 100 + 35 + stepNum, 50);
+         context.fillText(tape.characterAtIndex(i) , i * 100 + 35 - stepNum, 40);
 
    
       stepNum += 1
@@ -128,7 +158,7 @@ shiftTapeStep = (xCoordFunc, stepNum, stepIndices) ->
       # mark center square as current square being viewed
       drawThickLine(400)
       drawThickLine(500)
-   
+
 shiftTapeRight = ->
    shiftTapeStep((boxIndex, stepNum) ->
       return boxIndex * 100 + stepNum
@@ -152,17 +182,38 @@ nextOperation = () ->
       operation = currentOperations.shift()
       tape.doOperation(operation)
       switch operation
-         when "E" then alert("e")
-         when "L" then shiftTapeLeft()
-         when "R" then shiftTapeRight()
+         when "E" then drawCurrentTapeSnapshot()
+         when "L" then shiftTapeRight()   # we're actually shifting the head
+         when "R" then shiftTapeLeft()    # we're actually shifting the head
          else
             # Assuming we have a Px here since checks are done elsewhere
-            alert("p")
+            drawCurrentTapeSnapshot()
+            
    setTimeout(nextOperation, 1000)
    
 
 init = ->
 
+   drawCurrentTapeSnapshot()
+   
+   clearTable = ->
+      addedRows = $('.addedRow')
+      if addedRows.length > 0
+         addedRows.remove()
+         addRowCell = $(document.createElement('i'))
+         addRowCell.addClass('icon-plus-sign')
+         $('#stateMachineTable th:first-child').html('<i class="icon-plus-sign"></i>')
+
+   addRowToTable = ->
+      newRow = $('#stateRowTemplate').clone()
+      newRow.id = ''
+      newRow.addClass('addedRow')
+      $('#stateMachineTable').append(newRow)
+      return newRow
+      
+   $ ->
+      $('#clear-machine').on('click', clearTable)
+   
    $ ->
       $('#start-machine').on('click', 
          ->
@@ -189,11 +240,19 @@ init = ->
    $ ->
       $('#stateMachineTable').on('click', '.icon-plus-sign',
          (eventObject) -> 
-            newRow = $('#stateRowTemplate').clone()
-            newRow.id = ''
-            $('#stateMachineTable').append(newRow)
+            addRowToTable
             $(eventObject.target).parent().empty())
-      
+            
+   $ ->
+      $('#alternating-machine').on('click',
+         ->
+            clearTable()
+            for rowValues in alternatingOnesAndZeros
+               newRow = addRowToTable()
+               textFields = $(newRow).children('td').children('input')
+               for i in [0...rowValues.length]
+                 textFields[i].value = rowValues[i]
+      )
 
 $(document).ready init
 
