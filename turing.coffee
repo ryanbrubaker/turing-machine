@@ -4,6 +4,27 @@ alternatingOnesAndZeros = [
    [ '',    '1',  'R, R, P0', 'a']
 ]
 
+oneFourth = [
+   ['a', 'none', 'P0, R', 'b'],
+   ['b', 'none',     'R', 'c'],
+   ['c', 'none', 'P1, R', 'd'],
+   ['d', 'none',     'R', 'e'],
+   ['e', 'none', 'P0, R', 'd']
+]
+
+sequencesOfOnes = [
+   ['a',  'any', 'P@, R, P@, R, P0, R, R, P0, L, L', 'b'],
+   ['b',    '1',                   'R, Px, L, L, L', 'b'],
+   [ '',    '0',                                 '', 'c'],
+   ['c',    'any',                           'R, R', 'c'],
+   [ '', 'none',                            'P1, L', 'd'],
+   ['d',    'x',                             'E, R', 'c'],
+   [ '',    '@',                                'R', 'e'],
+   [ '', 'none',                             'L, L', 'd'],
+   ['e',  'any',                             'R, R', 'e'],
+   [ '', 'none',                         'P0, L, L', 'b'],
+]
+
 machineTimer = null
 shiftTimer = null
 
@@ -18,8 +39,11 @@ class State
    operationsFor: (character) ->
       if @operations[character]? 
          return @operations[character] 
+      else if @operations['any']?
+         return @operations['any']
       else 
          throw new Error('Encountered invalid symbol.')  
+         
    nextState: ->
       return @nextState
 
@@ -44,7 +68,10 @@ class StateMachine
          throw new Error('State must specify a character.') if state[1] is ''
          throw new Error('Allowed operations are "L", "R", "E", "P[x]"') if not @validOperations(state[2])
          
-         operations = state[2].split(',')
+         operations = []
+         if (state[2].length > 0)
+            operations = state[2].split(',')
+            
          for i in [0...operations.length]
             operations[i] = operations[i].trim()
          
@@ -65,12 +92,13 @@ class StateMachine
    
    validOperations: (operationList) ->
       valid = true
-      operations = operationList.split(',')
-      for operation in operations
-         operation = operation.trim()
-         valid = valid and
-                  ((operation is 'L' or operation is 'R' or operation is 'E') or
-                   (operation[0] is 'P' and operation.length is 2))
+      if "" != operationList
+         operations = operationList.split(',')
+         for operation in operations
+            operation = operation.trim()
+            valid = valid and
+                     ((operation is 'L' or operation is 'R' or operation is 'E') or
+                     (operation[0] is 'P' and operation.length is 2))
       return valid
    
    ## Returns the operations for the current state based on the
@@ -96,15 +124,17 @@ class Tape
       
    doOperation: (operation) ->
       switch operation
+         when "" then return
          when "E" then @printedCharacters[@currentPos] = ""
-         when "L" then @currentPos -= 1
+         when "L" 
+            @currentPos -= 1
          when "R" 
             @currentPos += 1
             @printedCharacters[@currentPos] = "" if @currentPos > @printedCharacters.length
          else
             # Assuming we have a Px here since checks are done elsewhere
             @printedCharacters[@currentPos] = operation[1]
-   
+
    currentCharacter: () ->
       return @printedCharacters[@currentPos] || ''
       
@@ -143,7 +173,7 @@ drawCurrentTapeSnapshot = () ->
    drawThickLine(500)
 
 
-shiftTapeStep = (xCoordFunc, stepNum, stepIndices) ->
+shiftTapeStep = (xCoordFunc, inc, stepNum, stepIndices) ->
    context = document.getElementById("paperTapeCanvas").getContext('2d')
    context.lineWidth = 1;
    context.font = "bold 48px sans-serif";
@@ -158,28 +188,31 @@ shiftTapeStep = (xCoordFunc, stepNum, stepIndices) ->
          context.lineTo(xCoordFunc(i, stepNum), 50)
          context.closePath()   
          context.stroke()
-         context.fillText(tape.characterAtIndex(i) , i * 100 + 35 - stepNum, 40);
+         charIndex = i - 1
+         if inc
+            charIndex = i + 1
+         context.fillText(tape.characterAtIndex(charIndex), xCoordFunc(i, stepNum) + 35, 40);
 
    
       stepNum += 1
       shiftTimer = setTimeout(() ->
-         shiftTapeStep(xCoordFunc, stepNum, stepIndices)
+         shiftTapeStep(xCoordFunc, inc, stepNum, stepIndices)
       , 1)
    else
       # mark center square as current square being viewed
       drawThickLine(400)
       drawThickLine(500)
 
-shiftTapeRight = ->
+shiftHeadLeft = ->
    shiftTapeStep((boxIndex, stepNum) ->
       return boxIndex * 100 + stepNum
-   , 0, [0..8])
+   , true, 0, [0..8])
       
 
-shiftTapeLeft = ->
+shiftHeadRight = ->
    shiftTapeStep((boxIndex, stepNum) ->
       return boxIndex * 100 - stepNum
-   , 0, [1..9])
+   , false, 0, [1..9])
 
 
 stateMachine = new StateMachine()
@@ -194,8 +227,8 @@ nextOperation = () ->
       tape.doOperation(operation)
       switch operation
          when "E" then drawCurrentTapeSnapshot()
-         when "L" then shiftTapeRight()   # we're actually shifting the head
-         when "R" then shiftTapeLeft()    # we're actually shifting the head
+         when "L" then shiftHeadLeft()   # we're actually shifting the head
+         when "R" then shiftHeadRight()    # we're actually shifting the head
          else
             # Assuming we have a Px here since checks are done elsewhere
             drawCurrentTapeSnapshot()
@@ -270,6 +303,28 @@ init = ->
                  textFields[i].value = rowValues[i]
       )
 
+   $ ->
+      $('#one-fourth-machine').on('click',
+         ->
+            clearTable()
+            for rowValues in oneFourth
+               newRow = addRowToTable()
+               textFields = $(newRow).children('td').children('input')
+               for i in [0...rowValues.length]
+                  textFields[i].value = rowValues[i]
+      )
+      
+   $ ->
+      $('#sequences-of-ones').on('click',
+         ->
+            clearTable()
+            for rowValues in sequencesOfOnes
+               newRow = addRowToTable()
+               textFields = $(newRow).children('td').children('input')
+               for i in [0...rowValues.length]
+                  textFields[i].value = rowValues[i]
+      )
+      
 $(document).ready init
 
 
