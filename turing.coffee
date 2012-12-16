@@ -4,6 +4,9 @@ alternatingOnesAndZeros = [
    [ '',    '1',  'R, R, P0', 'a']
 ]
 
+machineTimer = null
+shiftTimer = null
+
 class State
    constructor: (nextState) ->
       @operations = {}
@@ -21,7 +24,11 @@ class State
       return @nextState
 
 class StateMachine
+
    constructor: () ->
+      @reset()
+      
+   reset: () ->
       @states = {}
       @currentState = null
       
@@ -80,9 +87,13 @@ class StateMachine
 
 class Tape
    constructor: () ->
+      @reset()
+   
+   reset: () ->
       @currentPos = 4
       @printedCharacters = []
-   
+      
+      
    doOperation: (operation) ->
       switch operation
          when "E" then @printedCharacters[@currentPos] = ""
@@ -151,7 +162,7 @@ shiftTapeStep = (xCoordFunc, stepNum, stepIndices) ->
 
    
       stepNum += 1
-      setTimeout(() ->
+      shiftTimer = setTimeout(() ->
          shiftTapeStep(xCoordFunc, stepNum, stepIndices)
       , 1)
    else
@@ -189,7 +200,7 @@ nextOperation = () ->
             # Assuming we have a Px here since checks are done elsewhere
             drawCurrentTapeSnapshot()
             
-   setTimeout(nextOperation, 1000)
+   machineTimer = setTimeout(nextOperation, 1000)
    
 
 init = ->
@@ -197,6 +208,11 @@ init = ->
    drawCurrentTapeSnapshot()
    
    clearTable = ->
+      clearInterval(machineTimer)
+      clearInterval(shiftTimer)
+      stateMachine.reset()
+      tape.reset()
+      drawCurrentTapeSnapshot()
       addedRows = $('.addedRow')
       if addedRows.length > 0
          addedRows.remove()
@@ -240,7 +256,7 @@ init = ->
    $ ->
       $('#stateMachineTable').on('click', '.icon-plus-sign',
          (eventObject) -> 
-            addRowToTable
+            addRowToTable()
             $(eventObject.target).parent().empty())
             
    $ ->
