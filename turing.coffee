@@ -29,23 +29,30 @@ machineTimer = null
 shiftTimer = null
 
 class State
-   constructor: (nextState) ->
+   constructor: () ->
       @operations = {}
-      @nextState = nextState
    
-   addOperations: (character, operations) ->
-      @operations[character] = operations
+   getOperations: () ->
+      return @operations
+      
+   addOperations: (character, operations, nextState) ->
+      @operations[character] = [operations, nextState]
    
    operationsFor: (character) ->
       if @operations[character]? 
-         return @operations[character] 
+         return @operations[character][0]
       else if @operations['any']?
-         return @operations['any']
+         return @operations['any'][0]
       else 
          throw new Error('Encountered invalid symbol.')  
          
-   nextState: ->
-      return @nextState
+   nextStateFor: (character) ->
+      if @operations[character]? 
+         return @operations[character][1]
+      else if @operations['any']?
+         return @operations['any'][1]
+      else 
+         throw new Error('Encountered invalid symbol.')  
 
 class StateMachine
 
@@ -76,17 +83,18 @@ class StateMachine
             operations[i] = operations[i].trim()
          
          if state[0] is ''
-            @states[currentStateName].addOperations(state[1], operations)
+            @states[currentStateName].addOperations(state[1], operations, state[3])
          else
             currentStateName = state[0]
             initialStateName = currentStateName if not initialStateName?
-            newState = new State(state[3])
-            newState.addOperations(state[1], operations)
+            newState = new State()
+            newState.addOperations(state[1], operations, state[3])
             @states[currentStateName] = newState
       
       for stateName, state of @states
-         if not(@states[state.nextState]?)
-            throw new Error('Result state does not exist.')
+         for character, operations of state.getOperations()
+            if not(@states[operations[1]])
+               throw new Error('Result state does not exist.')
       
       @currentState = @states[initialStateName]
    
@@ -109,8 +117,9 @@ class StateMachine
       if null is @currentState
          throw new Error("Invalid state.")
       else
+         # return a copy of the array
          operations = @currentState.operationsFor(character).slice(0)
-         @currentState = @states[@currentState.nextState]
+         @currentState = @states[@currentState.nextStateFor(character)]
          return operations
 
 class Tape
@@ -233,7 +242,7 @@ nextOperation = () ->
             # Assuming we have a Px here since checks are done elsewhere
             drawCurrentTapeSnapshot()
             
-   machineTimer = setTimeout(nextOperation, 1000)
+   machineTimer = setTimeout(nextOperation, 500)
    
 
 init = ->

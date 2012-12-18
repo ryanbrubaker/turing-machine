@@ -16,27 +16,36 @@
 
     State.name = 'State';
 
-    function State(nextState) {
+    function State() {
       this.operations = {};
-      this.nextState = nextState;
     }
 
-    State.prototype.addOperations = function(character, operations) {
-      return this.operations[character] = operations;
+    State.prototype.getOperations = function() {
+      return this.operations;
+    };
+
+    State.prototype.addOperations = function(character, operations, nextState) {
+      return this.operations[character] = [operations, nextState];
     };
 
     State.prototype.operationsFor = function(character) {
       if (this.operations[character] != null) {
-        return this.operations[character];
+        return this.operations[character][0];
       } else if (this.operations['any'] != null) {
-        return this.operations['any'];
+        return this.operations['any'][0];
       } else {
         throw new Error('Encountered invalid symbol.');
       }
     };
 
-    State.prototype.nextState = function() {
-      return this.nextState;
+    State.prototype.nextStateFor = function(character) {
+      if (this.operations[character] != null) {
+        return this.operations[character][1];
+      } else if (this.operations['any'] != null) {
+        return this.operations['any'][1];
+      } else {
+        throw new Error('Encountered invalid symbol.');
+      }
     };
 
     return State;
@@ -57,7 +66,7 @@
     };
 
     StateMachine.prototype.setup = function(states) {
-      var currentStateName, i, initialStateName, newState, operations, state, stateName, _i, _j, _len, _ref, _ref1;
+      var character, currentStateName, i, initialStateName, newState, operations, state, stateName, _i, _j, _len, _ref, _ref1, _ref2;
       this.states = {};
       this.currentState = null;
       if (states.length === 0) {
@@ -84,22 +93,26 @@
           operations[i] = operations[i].trim();
         }
         if (state[0] === '') {
-          this.states[currentStateName].addOperations(state[1], operations);
+          this.states[currentStateName].addOperations(state[1], operations, state[3]);
         } else {
           currentStateName = state[0];
           if (!(initialStateName != null)) {
             initialStateName = currentStateName;
           }
-          newState = new State(state[3]);
-          newState.addOperations(state[1], operations);
+          newState = new State();
+          newState.addOperations(state[1], operations, state[3]);
           this.states[currentStateName] = newState;
         }
       }
       _ref1 = this.states;
       for (stateName in _ref1) {
         state = _ref1[stateName];
-        if (!(this.states[state.nextState] != null)) {
-          throw new Error('Result state does not exist.');
+        _ref2 = state.getOperations();
+        for (character in _ref2) {
+          operations = _ref2[character];
+          if (!this.states[operations[1]]) {
+            throw new Error('Result state does not exist.');
+          }
         }
       }
       return this.currentState = this.states[initialStateName];
@@ -128,7 +141,7 @@
         throw new Error("Invalid state.");
       } else {
         operations = this.currentState.operationsFor(character).slice(0);
-        this.currentState = this.states[this.currentState.nextState];
+        this.currentState = this.states[this.currentState.nextStateFor(character)];
         return operations;
       }
     };
@@ -285,7 +298,7 @@
           drawCurrentTapeSnapshot();
       }
     }
-    return machineTimer = setTimeout(nextOperation, 1000);
+    return machineTimer = setTimeout(nextOperation, 500);
   };
 
   init = function() {
