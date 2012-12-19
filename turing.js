@@ -44,7 +44,7 @@
         }
         context.fillText(tape.characterAtIndex(charIndex), xCoordFunc(i, stepNum) + 35, 40);
       }
-      stepNum += 1;
+      stepNum += 2;
       return shiftTimer = setTimeout(function() {
         return shiftTapeStep(xCoordFunc, inc, stepNum, stepIndices);
       }, 1);

@@ -35,7 +35,7 @@ shiftTapeStep = (xCoordFunc, inc, stepNum, stepIndices) ->
          context.fillText(tape.characterAtIndex(charIndex), xCoordFunc(i, stepNum) + 35, 40);
 
    
-      stepNum += 1
+      stepNum += 2
       shiftTimer = setTimeout(() ->
          shiftTapeStep(xCoordFunc, inc, stepNum, stepIndices)
       , 1)
