@@ -150,11 +150,19 @@ init = ->
    
    setPreconfiguredMachine = (machine) ->
       clearTable()
+      $('#stateMachineTable').find('.icon-plus-sign').remove()
+      numRows = machine.length
+      numRow = 0
       for rowValues in machine
          newRow = addRowToTable()
          textFields = $(newRow).children('td').children('input')
          for i in [0...rowValues.length]
-            textFields[i].value = rowValues[i]            
+            textFields[i].value = rowValues[i]
+            
+         newRow.find('.icon-plus-sign').remove() if numRow < (numRows - 1)
+         numRow += 1
+         
+       
             
    $ ->
       $('#alternating-machine').on('click',

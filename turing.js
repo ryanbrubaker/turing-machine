@@ -167,21 +167,23 @@
       });
     });
     setPreconfiguredMachine = function(machine) {
-      var i, newRow, rowValues, textFields, _i, _len, _results;
+      var i, newRow, numRow, numRows, rowValues, textFields, _i, _j, _len, _ref, _results;
       clearTable();
+      $('#stateMachineTable').find('.icon-plus-sign').remove();
+      numRows = machine.length;
+      numRow = 0;
       _results = [];
       for (_i = 0, _len = machine.length; _i < _len; _i++) {
         rowValues = machine[_i];
         newRow = addRowToTable();
         textFields = $(newRow).children('td').children('input');
-        _results.push((function() {
-          var _j, _ref, _results1;
-          _results1 = [];
-          for (i = _j = 0, _ref = rowValues.length; 0 <= _ref ? _j < _ref : _j > _ref; i = 0 <= _ref ? ++_j : --_j) {
-            _results1.push(textFields[i].value = rowValues[i]);
-          }
-          return _results1;
-        })());
+        for (i = _j = 0, _ref = rowValues.length; 0 <= _ref ? _j < _ref : _j > _ref; i = 0 <= _ref ? ++_j : --_j) {
+          textFields[i].value = rowValues[i];
+        }
+        if (numRow < (numRows - 1)) {
+          newRow.find('.icon-plus-sign').remove();
+        }
+        _results.push(numRow += 1);
       }
       return _results;
     };
