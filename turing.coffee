@@ -1,40 +1,6 @@
 machineTimer = null
 shiftTimer = null
 
-
-
-
-class Tape
-   constructor: () ->
-      @reset()
-   
-   reset: () ->
-      @currentPos = 4
-      @printedCharacters = []
-      
-      
-   doOperation: (operation) ->
-      switch operation
-         when "" then return
-         when "E" then @printedCharacters[@currentPos] = ""
-         when "L" 
-            @currentPos -= 1
-         when "R" 
-            @currentPos += 1
-            @printedCharacters[@currentPos] = "" if @currentPos > @printedCharacters.length
-         else
-            # Assuming we have a Px here since checks are done elsewhere
-            @printedCharacters[@currentPos] = operation[1]
-
-   currentCharacter: () ->
-      return @printedCharacters[@currentPos] || ''
-      
-   characterAtIndex: (index) ->
-      if @printedCharacters[@currentPos - (4 - index)]?
-         return @printedCharacters[@currentPos - (4 - index)]
-      else
-         return ""
-
 drawThickLine = (xCoord) ->
    context = document.getElementById("paperTapeCanvas").getContext('2d')
    context.lineWidth = 5;
@@ -107,8 +73,11 @@ shiftHeadRight = ->
 
 
 stateMachine = new Turing.StateMachine
+tape = new Turing.Tape(4)
+
+# The current operations being performed by the machine
 currentOperations = []
-tape = new Tape()
+
 
 nextOperation = () ->
    if 0 is currentOperations.length
