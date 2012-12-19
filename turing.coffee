@@ -1,50 +1,34 @@
 machineTimer = null
 shiftTimer = null
+kThickLine = true
 
-drawThickLine = (xCoord) ->
+drawLine = (xCoord, drawThick) ->
    context = document.getElementById("paperTapeCanvas").getContext('2d')
-   context.lineWidth = 5;
+   context.lineWidth = if drawThick then 5 else 1
    context.beginPath()
    context.moveTo(xCoord, 0)
    context.lineTo(xCoord, 50)
    context.closePath()
    context.stroke()
 
-
 drawCurrentTapeSnapshot = () ->
-   context = document.getElementById("paperTapeCanvas").getContext('2d')
-   context.lineWidth = 1;
-   context.font = "bold 48px sans-serif";
-   context.clearRect(0, 0, context.canvas.width, context.canvas.height)
-   
+   context = document.getElementById("paperTapeCanvas").getContext('2d')   
    for i in [0..8]
-      context.beginPath
-      context.moveTo(i * 100, 0)
-      context.lineTo(i * 100, 50)
-      context.strokeStyle = "#000"
-      context.closePath()   
-      context.stroke()
+      drawLine(i * 100, !kThickLine)
       context.fillText(tape.characterAtIndex(i) , i * 100 + 35, 40);
    
-   drawThickLine(400)
-   drawThickLine(500)
+   drawLine(400, kThickLine)
+   drawLine(500, kThickLine)
 
 
 shiftTapeStep = (xCoordFunc, inc, stepNum, stepIndices) ->
    context = document.getElementById("paperTapeCanvas").getContext('2d')
-   context.lineWidth = 1;
-   context.font = "bold 48px sans-serif";
-   context.strokeStyle = "#000"
 
    if stepNum <= 100
       context.clearRect(0, 0, context.canvas.width, context.canvas.height)
       
       for i in stepIndices
-         context.beginPath()
-         context.moveTo(xCoordFunc(i, stepNum), 0)
-         context.lineTo(xCoordFunc(i, stepNum), 50)
-         context.closePath()   
-         context.stroke()
+         drawLine(xCoordFunc(i, stepNum), !kThickLine)
          charIndex = i - 1
          if inc
             charIndex = i + 1
@@ -57,8 +41,8 @@ shiftTapeStep = (xCoordFunc, inc, stepNum, stepIndices) ->
       , 1)
    else
       # mark center square as current square being viewed
-      drawThickLine(400)
-      drawThickLine(500)
+      drawLine(400, kThickLine)
+      drawLine(500, kThickLine)
 
 shiftHeadLeft = ->
    shiftTapeStep((boxIndex, stepNum) ->
@@ -81,7 +65,10 @@ currentOperations = []
 
 nextOperation = () ->
    if 0 is currentOperations.length
-      currentOperations = stateMachine.processState(tape.currentCharacter())
+      try
+         currentOperations = stateMachine.processState(tape.currentCharacter())
+      catch error
+         alert(error)
    else
       operation = currentOperations.shift()
       tape.doOperation(operation)
@@ -98,6 +85,10 @@ nextOperation = () ->
 
 init = ->
 
+   context = document.getElementById("paperTapeCanvas").getContext('2d')
+   context.font = "bold 48px sans-serif";
+   context.strokeStyle = "#000"
+
    drawCurrentTapeSnapshot()
    
    clearTable = ->
@@ -105,6 +96,7 @@ init = ->
       clearInterval(shiftTimer)
       stateMachine.reset()
       tape.reset()
+      context.clearRect(0, 0, context.canvas.width, context.canvas.height)
       drawCurrentTapeSnapshot()
       addedRows = $('.addedRow')
       if addedRows.length > 0
@@ -141,8 +133,11 @@ init = ->
                alert(error)
             
             # now run it
-            currentOperations = stateMachine.processState("")
-            nextOperation()
+            try
+               currentOperations = stateMachine.processState("")
+               nextOperation()
+            catch error
+               alert(error)
       )
             
             
@@ -152,37 +147,31 @@ init = ->
             addRowToTable()
             $(eventObject.target).parent().empty())
             
+   
+   setPreconfiguredMachine = (machine) ->
+      clearTable()
+      for rowValues in machine
+         newRow = addRowToTable()
+         textFields = $(newRow).children('td').children('input')
+         for i in [0...rowValues.length]
+            textFields[i].value = rowValues[i]            
+            
    $ ->
       $('#alternating-machine').on('click',
          ->
-            clearTable()
-            for rowValues in Turing.machines.alternatingOnesAndZeros
-               newRow = addRowToTable()
-               textFields = $(newRow).children('td').children('input')
-               for i in [0...rowValues.length]
-                 textFields[i].value = rowValues[i]
+            setPreconfiguredMachine(Turing.machines.alternatingOnesAndZeros)
       )
 
    $ ->
       $('#one-fourth-machine').on('click',
          ->
-            clearTable()
-            for rowValues in Turing.machines.oneFourth
-               newRow = addRowToTable()
-               textFields = $(newRow).children('td').children('input')
-               for i in [0...rowValues.length]
-                  textFields[i].value = rowValues[i]
+            setPreconfiguredMachine(Turing.machines.oneFourth)
       )
       
    $ ->
       $('#sequences-of-ones').on('click',
          ->
-            clearTable()
-            for rowValues in Turing.machines.sequencesOfOnes
-               newRow = addRowToTable()
-               textFields = $(newRow).children('td').children('input')
-               for i in [0...rowValues.length]
-                  textFields[i].value = rowValues[i]
+            setPreconfiguredMachine(Turing.machines.sequencesOfOnes)
       )
       
 $(document).ready init

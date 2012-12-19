@@ -47,13 +47,7 @@ class Turing.StateMachine
             # First state specified is considered initial state
             initialStateName = currentStateName if not initialStateName?
       
-      stateNames = []
       for stateName, state of @states
-         # Check uniqueness of state name
-         if stateName in stateNames
-            throw new Error('State names must be unique')
-         stateNames.push(stateName)
-         
          # Check to make sure end state actually exists
          for character, operations of state.getOperations()
             if not(@states[operations[Turing.State.kNextStateKey]])
