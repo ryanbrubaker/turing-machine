@@ -1,58 +1,6 @@
-alternatingOnesAndZeros = [
-   ['a', 'none',        'P0', 'a'],
-   [ '',    '0',  'R, R, P1', 'a'],
-   [ '',    '1',  'R, R, P0', 'a']
-]
-
-oneFourth = [
-   ['a', 'none', 'P0, R', 'b'],
-   ['b', 'none',     'R', 'c'],
-   ['c', 'none', 'P1, R', 'd'],
-   ['d', 'none',     'R', 'e'],
-   ['e', 'none', 'P0, R', 'd']
-]
-
-sequencesOfOnes = [
-   ['a',  'any', 'P@, R, P@, R, P0, R, R, P0, L, L', 'b'],
-   ['b',    '1',                   'R, Px, L, L, L', 'b'],
-   [ '',    '0',                                 '', 'c'],
-   ['c',    'any',                           'R, R', 'c'],
-   [ '', 'none',                            'P1, L', 'd'],
-   ['d',    'x',                             'E, R', 'c'],
-   [ '',    '@',                                'R', 'e'],
-   [ '', 'none',                             'L, L', 'd'],
-   ['e',  'any',                             'R, R', 'e'],
-   [ '', 'none',                         'P0, L, L', 'b'],
-]
-
 machineTimer = null
 shiftTimer = null
 
-class State
-   constructor: () ->
-      @operations = {}
-   
-   getOperations: () ->
-      return @operations
-      
-   addOperations: (character, operations, nextState) ->
-      @operations[character] = [operations, nextState]
-   
-   operationsFor: (character) ->
-      if @operations[character]? 
-         return @operations[character][0]
-      else if @operations['any']?
-         return @operations['any'][0]
-      else 
-         throw new Error('Encountered invalid symbol.')  
-         
-   nextStateFor: (character) ->
-      if @operations[character]? 
-         return @operations[character][1]
-      else if @operations['any']?
-         return @operations['any'][1]
-      else 
-         throw new Error('Encountered invalid symbol.')  
 
 class StateMachine
 
@@ -87,13 +35,13 @@ class StateMachine
          else
             currentStateName = state[0]
             initialStateName = currentStateName if not initialStateName?
-            newState = new State()
+            newState = new Turing.State
             newState.addOperations(state[1], operations, state[3])
             @states[currentStateName] = newState
       
       for stateName, state of @states
          for character, operations of state.getOperations()
-            if not(@states[operations[1]])
+            if not(@states[operations[Turing.State.kNextStateKey]])
                throw new Error('Result state does not exist.')
       
       @currentState = @states[initialStateName]
@@ -305,7 +253,7 @@ init = ->
       $('#alternating-machine').on('click',
          ->
             clearTable()
-            for rowValues in alternatingOnesAndZeros
+            for rowValues in Turing.machines.alternatingOnesAndZeros
                newRow = addRowToTable()
                textFields = $(newRow).children('td').children('input')
                for i in [0...rowValues.length]
@@ -316,7 +264,7 @@ init = ->
       $('#one-fourth-machine').on('click',
          ->
             clearTable()
-            for rowValues in oneFourth
+            for rowValues in Turing.machines.oneFourth
                newRow = addRowToTable()
                textFields = $(newRow).children('td').children('input')
                for i in [0...rowValues.length]
@@ -327,7 +275,7 @@ init = ->
       $('#sequences-of-ones').on('click',
          ->
             clearTable()
-            for rowValues in sequencesOfOnes
+            for rowValues in Turing.machines.sequencesOfOnes
                newRow = addRowToTable()
                textFields = $(newRow).children('td').children('input')
                for i in [0...rowValues.length]
