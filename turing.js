@@ -70,13 +70,13 @@
   shiftHeadLeft = function() {
     return shiftTapeStep(function(boxIndex, stepNum) {
       return boxIndex * 100 + stepNum;
-    }, true, 0, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    }, true, 0, [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
   };
 
   shiftHeadRight = function() {
     return shiftTapeStep(function(boxIndex, stepNum) {
       return boxIndex * 100 - stepNum;
-    }, false, 0, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    }, false, 0, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
   };
 
   stateMachine = new Turing.StateMachine;

@@ -63,13 +63,13 @@ shiftTapeStep = (xCoordFunc, inc, stepNum, stepIndices) ->
 shiftHeadLeft = ->
    shiftTapeStep((boxIndex, stepNum) ->
       return boxIndex * 100 + stepNum
-   , true, 0, [0..8])
+   , true, 0, [-1..8])
       
 
 shiftHeadRight = ->
    shiftTapeStep((boxIndex, stepNum) ->
       return boxIndex * 100 - stepNum
-   , false, 0, [1..9])
+   , false, 0, [0..9])
 
 
 stateMachine = new Turing.StateMachine
